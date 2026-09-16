@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
-import { Download, HelpCircle, RotateCcw } from "lucide-react";
+import { BookOpen, Download, RotateCcw } from "lucide-react";
 import { Bridge } from "@/components/dashboard/bridge";
 import { ControllerPanel } from "@/components/dashboard/controller-panel";
 import { GenerativePanel } from "@/components/dashboard/generative-panel";
 import { Ignition } from "@/components/dashboard/ignition";
+import { Guide } from "@/components/guide/guide";
 import { Button } from "@/components/ui/button";
 import { useSreStore } from "@/store/sre-store";
 
 export function DashboardShell() {
   const [boot, setBoot] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const state = useSreStore((s) => s.state);
   const reset = useSreStore((s) => s.reset);
   const exportSession = useSreStore((s) => s.exportSession);
@@ -41,6 +43,14 @@ export function DashboardShell() {
     if (window.confirm("Reset this experiment and clear its current tape?")) reset();
   }
 
+  function handleBrandClick() {
+    if (showGuide) {
+      setShowGuide(false);
+      return;
+    }
+    if (state) confirmReset();
+  }
+
   if (!boot) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-bg text-fg">
@@ -53,45 +63,51 @@ export function DashboardShell() {
     <div className="flex min-h-dvh flex-col bg-bg text-fg">
       <header className="sticky top-0 z-40 border-b border-fg/10 bg-bg/95 px-4 py-3 backdrop-blur lg:px-5">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-          <button type="button" onClick={() => state && confirmReset()} className="min-w-0 text-left" title={state ? "Reset experiment" : undefined}>
+          <button
+            type="button"
+            onClick={handleBrandClick}
+            className="min-w-0 text-left"
+            title={showGuide ? "Back to machine" : state ? "Reset experiment" : undefined}
+          >
             <span className="text-sm font-medium tracking-tight text-fg">TOPOS-SRE</span>
             <p className="truncate font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">
               Topological semantic recursion
             </p>
           </button>
 
-          {state ? (
-            <div className="flex items-center gap-1">
-              <details className="relative">
-                <summary className="inline-flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-md px-2 text-xs text-muted hover:bg-elevated hover:text-fg">
-                  <HelpCircle className="size-4" />
-                  <span className="hidden sm:inline">Help</span>
-                </summary>
-                <div className="absolute right-0 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-fg/10 bg-surface p-4 shadow-2xl">
-                  <p className="text-sm font-medium text-fg">How to drive this thing</p>
-                  <ol className="mt-2 space-y-2 text-xs leading-relaxed text-muted">
-                    <li><strong className="text-fg">1.</strong> Step once to watch one mutation happen.</li>
-                    <li><strong className="text-fg">2.</strong> Run ×4 when you want a tiny automatic burst.</li>
-                    <li><strong className="text-fg">3.</strong> Raise Variation for looser token mixing.</li>
-                    <li><strong className="text-fg">4.</strong> Use a perturbation when the path gets boring or stuck.</li>
-                    <li><strong className="text-fg">5.</strong> Ignore Controller Guts unless you want to inspect why it changed.</li>
-                  </ol>
-                </div>
-              </details>
-              <Button type="button" variant="ghost" size="sm" onClick={download} aria-label="Export session" title="Export session JSON">
-                <Download />
-                <span className="hidden sm:inline">Export</span>
-              </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={confirmReset} aria-label="Reset experiment" title="Reset experiment">
-                <RotateCcw />
-                <span className="hidden sm:inline">Reset</span>
-              </Button>
-            </div>
-          ) : null}
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant={showGuide ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setShowGuide((v) => !v)}
+              aria-pressed={showGuide}
+              aria-label={showGuide ? "Close guide" : "Open guide and experiments"}
+              title={showGuide ? "Back to machine" : "Guide + experiment lab"}
+            >
+              <BookOpen />
+              <span className="hidden sm:inline">{showGuide ? "Machine" : "Guide"}</span>
+            </Button>
+
+            {state ? (
+              <>
+                <Button type="button" variant="ghost" size="sm" onClick={download} aria-label="Export session" title="Export session JSON">
+                  <Download />
+                  <span className="hidden sm:inline">Export</span>
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={confirmReset} aria-label="Reset experiment" title="Reset experiment">
+                  <RotateCcw />
+                  <span className="hidden sm:inline">Reset</span>
+                </Button>
+              </>
+            ) : null}
+          </div>
         </div>
       </header>
 
-      {!state ? (
+      {showGuide ? (
+        <Guide onClose={() => setShowGuide(false)} />
+      ) : !state ? (
         <Ignition />
       ) : (
         <>
