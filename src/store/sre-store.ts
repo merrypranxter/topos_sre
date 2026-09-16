@@ -4,7 +4,13 @@ import { executeOpBlock } from "@/lib/ngl/local";
 import { HardLogicController } from "@/lib/sre/hlc";
 import type { AuditEntry, CycleRecord, PerturbKind, SessionDump, StateRegister } from "@/lib/sre/types";
 
-const AUTO_BURST = 8;
+const AUTO_BURST = 4;
+const AUTO_STEP_DELAY_MS = 220;
+const MAX_TAPE = 160;
+const MAX_AUDIT = 320;
+
+const sleep = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+const keepLast = <T,>(items: T[], max: number) => (items.length > max ? items.slice(items.length - max) : items);
 
 type SreStore = {
   state: StateRegister | null;
@@ -53,8 +59,8 @@ function ingestOutput(get: () => SreStore, set: (p: Partial<SreStore>) => void, 
     state: hlc.state,
     currentBlock: hlc.opBlock(),
     lastOutput: text,
-    tape: [...get().tape, rec],
-    audit: [...get().audit, audit],
+    tape: keepLast([...get().tape, rec], MAX_TAPE),
+    audit: keepLast([...get().audit, audit], MAX_AUDIT),
     error: null,
     manualDraft: "",
   });
@@ -92,24 +98,32 @@ export const useSreStore = create<SreStore>()(
       step: async () => {
         const { state, currentBlock, pending, temperature } = get();
         if (!state || pending || !currentBlock) return;
+
         set({ pending: true, error: null });
+
+        // Intentionally local-only. This executes deterministic TypeScript in the browser.
+        // It does not call Grok, OpenAI, or any other paid model API.
         const text = executeOpBlock(currentBlock, temperature).trim();
         if (!text) {
-          set({ pending: false, error: "NGL returned an empty OUTPUT_STATE.", autoRemaining: 0 });
+          set({ pending: false, error: "Local NGL returned an empty OUTPUT_STATE.", autoRemaining: 0 });
           return;
         }
+
         ingestOutput(get, set, text);
         const remaining = get().autoRemaining;
+
         if (remaining > 1) {
           set({ autoRemaining: remaining - 1, pending: false });
-          await get().step();
+          await sleep(AUTO_STEP_DELAY_MS);
+          if (get().autoRemaining > 0) await get().step();
           return;
         }
+
         set({ pending: false, autoRemaining: 0 });
       },
 
       runBurst: async () => {
-        if (!get().state || get().pending) return;
+        if (!get().state || get().pending || get().autoRemaining > 0) return;
         set({ autoRemaining: AUTO_BURST });
         await get().step();
       },
@@ -124,13 +138,13 @@ export const useSreStore = create<SreStore>()(
 
       perturb: (kind, payload) => {
         const current = get().state;
-        if (!current) return;
+        if (!current || get().pending) return;
         const hlc = new HardLogicController(structuredClone(current));
         hlc.applyPerturbation(kind, payload);
-        set({ state: hlc.state, currentBlock: hlc.opBlock() });
+        set({ state: hlc.state, currentBlock: hlc.opBlock(), error: null });
       },
 
-      setTemperature: (n) => set({ temperature: n }),
+      setTemperature: (n) => set({ temperature: Math.min(1.4, Math.max(0.2, n)) }),
       setManualDraft: (s) => set({ manualDraft: s }),
 
       reset: () =>
