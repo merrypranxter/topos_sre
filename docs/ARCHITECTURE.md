@@ -1,10 +1,10 @@
-# TOPOS-SRE Architecture (SRE-V3)
+# TOPOS-SRE Architecture (SRE-V3.1)
 
 Closed-loop linguistic ecology. Two layers, a-aesthetic.
 
 ## Objective
 
-Induce a regime shift: a point where a generative model can no longer satisfy
+Induce a regime shift: a point where a generative layer can no longer satisfy
 hard structural constraints in standard English and must invent a synthetic
 representation to remain in the loop. The desired object is unprescribed.
 
@@ -25,7 +25,7 @@ Holds:
 - active matrix and operator
 - symbol table (glyph, role, inheritance, cycle created)
 - mutation ledger
-- last 12 raw outputs
+- recent raw outputs
 - `SIM_STRUCT` — mean pairwise normalized Levenshtein *similarity* of last 3
 - `SIM_SEMANTIC` — mean pairwise token-cosine of last 3
 
@@ -35,14 +35,15 @@ Never generates prose. Never sees an aesthetic brief.
 
 Blind executor. Receives `[SRE_OP_BLOCK]`, returns `OUTPUT_STATE`.
 
-Sterilized system prompt: `prompts/ngl-v1.txt`.
+The standalone dashboard uses `src/lib/ngl/local.ts`, a deterministic onboard executor that runs entirely in the browser. **Step and Run do not make model API calls.**
 
-The live dashboard calls grok-4.5 server-side. A manual bridge exists so an
-external worker can be substituted without contaminating the HLC.
+A sterilized external-worker prompt remains in `prompts/ngl-v1.txt`, and the manual bridge can ingest an `OUTPUT_STATE` generated elsewhere.
+
+`src/lib/ngl/generate.ts` retains an optional xAI server caller for future experiments. It is not imported by the standalone dashboard and is explicitly disabled unless `XAI_REMOTE_ENABLED=true` is configured. Remote output and request counts are capped and paid retries are disabled.
 
 ## OP_BLOCK (neutral)
 
-```
+```text
 [SRE_OP_BLOCK]
 STATE_CYCLE:
 SIM_STRUCT: | SIM_SEMANTIC:
@@ -61,7 +62,7 @@ INPUT_STATE:
 [END_BLOCK]
 ```
 
-Relation sets (rotate A→B→C→D→E→A):
+Relation sets rotate A→B→C→D→E→A:
 
 | ID   | Inventory                                                          |
 | ---- | ------------------------------------------------------------------ |
@@ -94,5 +95,10 @@ Relation sets (rotate A→B→C→D→E→A):
 
 ## Interface contract
 
-Controller panel and generative panel are visually and operationally separate.
-The bridge is the only path from OUTPUT_STATE back into the HLC.
+The **Output** panel is the primary play surface. The **Controller** is explanatory instrumentation. The exact OP_BLOCK, similarity meters, symbol table, and audit trail remain available under **Controller guts** instead of occupying the main mobile workflow.
+
+The dashboard's normal feedback path is local:
+
+`HLC → local NGL → OUTPUT_STATE → HLC`
+
+The manual bridge is an optional alternate path for externally generated output.
