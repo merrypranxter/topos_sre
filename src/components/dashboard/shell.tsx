@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { Download, RotateCcw } from "lucide-react";
+import { Download, HelpCircle, RotateCcw } from "lucide-react";
 import { Bridge } from "@/components/dashboard/bridge";
 import { ControllerPanel } from "@/components/dashboard/controller-panel";
 import { GenerativePanel } from "@/components/dashboard/generative-panel";
 import { Ignition } from "@/components/dashboard/ignition";
 import { Button } from "@/components/ui/button";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSreStore } from "@/store/sre-store";
 
 export function DashboardShell() {
@@ -38,66 +36,72 @@ export function DashboardShell() {
     URL.revokeObjectURL(url);
   }
 
+  function confirmReset() {
+    if (!state) return;
+    if (window.confirm("Reset this experiment and clear its current tape?")) reset();
+  }
+
   if (!boot) {
     return (
-      <div className="flex min-h-dvh flex-col bg-bg text-fg">
-        <header className="flex items-center justify-between gap-3 border-b border-fg/10 px-4 py-3 lg:px-5">
-          <div className="min-w-0">
-            <span className="text-sm font-medium tracking-tight text-fg">TOPOS-SRE</span>
-            <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-muted">
-              Topological semantic recursion
-            </p>
-          </div>
-        </header>
-        <Ignition />
+      <div className="flex min-h-dvh items-center justify-center bg-bg text-fg">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">booting TOPOS-SRE…</p>
       </div>
     );
   }
 
   return (
-    <TooltipProvider delayDuration={200}>
-      <div className="flex min-h-dvh flex-col bg-bg text-fg">
-        <header className="flex items-center justify-between gap-3 border-b border-fg/10 px-4 py-3 lg:px-5">
-          <div className="min-w-0">
-            <Link to="/" className="text-sm font-medium tracking-tight text-fg">
-              TOPOS-SRE
-            </Link>
-            <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-muted">
+    <div className="flex min-h-dvh flex-col bg-bg text-fg">
+      <header className="sticky top-0 z-40 border-b border-fg/10 bg-bg/95 px-4 py-3 backdrop-blur lg:px-5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+          <button type="button" onClick={() => state && confirmReset()} className="min-w-0 text-left" title={state ? "Reset experiment" : undefined}>
+            <span className="text-sm font-medium tracking-tight text-fg">TOPOS-SRE</span>
+            <p className="truncate font-mono text-[0.62rem] uppercase tracking-[0.16em] text-muted">
               Topological semantic recursion
             </p>
-          </div>
-          <nav className="flex items-center gap-1">
-            <Link
-              to="/spec"
-              className="inline-flex h-11 items-center px-3 font-mono text-[0.7rem] uppercase tracking-wider text-muted hover:text-fg"
-            >
-              Spec
-            </Link>
-            {state ? (
-              <>
-                <Button type="button" variant="ghost" size="icon" onClick={download} aria-label="Export session">
-                  <Download />
-                </Button>
-                <Button type="button" variant="ghost" size="icon" onClick={reset} aria-label="Reset">
-                  <RotateCcw />
-                </Button>
-              </>
-            ) : null}
-          </nav>
-        </header>
+          </button>
 
-        {!state ? (
-          <Ignition />
-        ) : (
-          <>
-            <div className="grid min-h-0 flex-1 grid-cols-1 divide-y divide-fg/10 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
-              <ControllerPanel />
-              <GenerativePanel />
+          {state ? (
+            <div className="flex items-center gap-1">
+              <details className="relative">
+                <summary className="inline-flex h-10 cursor-pointer list-none items-center gap-1.5 rounded-md px-2 text-xs text-muted hover:bg-elevated hover:text-fg">
+                  <HelpCircle className="size-4" />
+                  <span className="hidden sm:inline">Help</span>
+                </summary>
+                <div className="absolute right-0 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-fg/10 bg-surface p-4 shadow-2xl">
+                  <p className="text-sm font-medium text-fg">How to drive this thing</p>
+                  <ol className="mt-2 space-y-2 text-xs leading-relaxed text-muted">
+                    <li><strong className="text-fg">1.</strong> Step once to watch one mutation happen.</li>
+                    <li><strong className="text-fg">2.</strong> Run ×4 when you want a tiny automatic burst.</li>
+                    <li><strong className="text-fg">3.</strong> Raise Variation for looser token mixing.</li>
+                    <li><strong className="text-fg">4.</strong> Use a perturbation when the path gets boring or stuck.</li>
+                    <li><strong className="text-fg">5.</strong> Ignore Controller Guts unless you want to inspect why it changed.</li>
+                  </ol>
+                </div>
+              </details>
+              <Button type="button" variant="ghost" size="sm" onClick={download} aria-label="Export session" title="Export session JSON">
+                <Download />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={confirmReset} aria-label="Reset experiment" title="Reset experiment">
+                <RotateCcw />
+                <span className="hidden sm:inline">Reset</span>
+              </Button>
             </div>
-            <Bridge />
-          </>
-        )}
-      </div>
-    </TooltipProvider>
+          ) : null}
+        </div>
+      </header>
+
+      {!state ? (
+        <Ignition />
+      ) : (
+        <>
+          <Bridge />
+          <main className="mx-auto grid w-full max-w-7xl min-h-0 flex-1 grid-cols-1 divide-y divide-fg/10 lg:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)] lg:divide-x lg:divide-y-0">
+            <GenerativePanel />
+            <ControllerPanel />
+          </main>
+        </>
+      )}
+    </div>
   );
 }
