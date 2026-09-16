@@ -15,7 +15,7 @@ Repository: [github.com/merrypranxter/topos_sre](https://github.com/merrypranxte
 
 ```
 src/lib/sre/          HLC engine (pure TypeScript, no network)
-src/lib/ngl/          NGL server function (xAI chat)
+src/lib/ngl/          onboard NGL executor + optional remote caller
 src/store/            session + loop orchestration
 src/components/       SRE-V3 dashboard
 prompts/ngl-v1.txt    sterilized worker prompt
@@ -28,20 +28,20 @@ docs/NGL.md           worker contract
 
 1. Operator supplies an **anchor**.
 2. HLC emits an `[SRE_OP_BLOCK]` (relation set, matrix, operator, mappings, decay).
-3. NGL returns only `OUTPUT_STATE`.
+3. NGL (onboard executor) returns only `OUTPUT_STATE`.
 4. HLC ingests the text, updates similarity / attractor / decay, emits the next block.
 5. Repeat. Perturbations are optional shocks, not style instructions.
 
 Do not tell the NGL to “do a better job.” Do not tell the HLC to “make it weirder.”
 
-If the generative layer is quota-blocked, the HLC still runs. Paste an `OUTPUT_STATE` into the manual bridge and Feed.
+The manual bridge still accepts an external worker’s `OUTPUT_STATE` if you want a different generator in the loop.
 
 ## Local engine tests
 
 Node 22+:
 
 ```
-node --experimental-strip-types --test src/lib/sre/hlc.test.ts
+node --experimental-strip-types --test src/lib/sre/hlc.test.ts src/lib/ngl/local.test.ts
 ```
 
 or `npm test`.

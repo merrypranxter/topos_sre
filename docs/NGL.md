@@ -1,9 +1,15 @@
 # Neutral Generative Layer
 
 Prompt: `prompts/ngl-v1.txt`  
-Caller: `src/lib/ngl/generate.ts`
+Onboard executor: `src/lib/ngl/local.ts`  
+Remote caller: `src/lib/ngl/generate.ts`
 
 The NGL is a worker. It has no ledger and no opinion about the experiment.
+
+The console Step/Run path uses the onboard executor: a non-autonomous transition
+engine that applies mappings, forbidden substitution, operator, relation-set
+inventory, decay, and matrix token counts to INPUT_STATE. The remote worker is
+optional. The manual bridge still accepts an external OUTPUT_STATE.
 
 ## Contract
 
