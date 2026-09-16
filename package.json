@@ -1,0 +1,14 @@
+{
+  "name": "topos-sre",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Topological Semantic Recursion Engine — SRE-V3 Hard-Logic Controller and dashboard",
+  "scripts": {
+    "test": "node --experimental-strip-types --test src/lib/sre/hlc.test.ts"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  }
+}
