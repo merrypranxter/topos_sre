@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { generateNgl } from "@/lib/ngl/generate";
+import { executeOpBlock } from "@/lib/ngl/local";
 import { HardLogicController } from "@/lib/sre/hlc";
 import type { AuditEntry, CycleRecord, PerturbKind, SessionDump, StateRegister } from "@/lib/sre/types";
 
@@ -93,12 +93,12 @@ export const useSreStore = create<SreStore>()(
         const { state, currentBlock, pending, temperature } = get();
         if (!state || pending || !currentBlock) return;
         set({ pending: true, error: null });
-        const result = await generateNgl({ data: { opBlock: currentBlock, temperature } });
-        if (!result.ok) {
-          set({ pending: false, error: result.error, autoRemaining: 0 });
+        const text = executeOpBlock(currentBlock, temperature).trim();
+        if (!text) {
+          set({ pending: false, error: "NGL returned an empty OUTPUT_STATE.", autoRemaining: 0 });
           return;
         }
-        ingestOutput(get, set, result.text);
+        ingestOutput(get, set, text);
         const remaining = get().autoRemaining;
         if (remaining > 1) {
           set({ autoRemaining: remaining - 1, pending: false });
