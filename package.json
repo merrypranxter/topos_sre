@@ -1,14 +1,32 @@
 {
   "name": "topos-sre",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
-  "description": "Topological Semantic Recursion Engine — SRE-V3 Hard-Logic Controller and dashboard",
+  "description": "Topological Semantic Recursion Engine — local-first SRE-V3 dashboard",
   "scripts": {
-    "test": "node --experimental-strip-types --test src/lib/sre/hlc.test.ts"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test src/lib/sre/hlc.test.ts src/lib/ngl/local.test.ts"
   },
   "license": "MIT",
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
   }
 }
